@@ -1,0 +1,6 @@
+janitor.pivot\_longer
+=====================
+
+.. currentmodule:: janitor
+
+.. autofunction:: pivot_longer

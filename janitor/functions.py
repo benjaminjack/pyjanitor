@@ -3129,3 +3129,76 @@ def join_apply(df, func, new_column_name):
     """
     df = df.copy().join(df.apply(func, axis=1).rename(new_column_name))
     return df
+
+
+@pf.register_dataframe_method
+def pivot_longer(
+    df: pd.DataFrame, column_names, names_to, values_to
+) -> pd.DataFrame:
+    """
+    Unpivot a DataFrame from 'wide' to 'long' format.
+
+    This method does not mutate the original DataFrame.
+
+    Intended to be the method-chaining alternative to pd.melt with
+    some syntactic sugar. This function is useful to massage a DataFrame into a
+    format where one or more columns are considered measured variables
+    (column_names), and all other columns are considered identifier variables.
+    All measured variables are “unpivoted” (and typically duplicated) along the
+    row axis, leaving just two non-identifier columns, ‘names_to’ and
+    ‘values_to’.
+
+    Note: The DataFrame index will be reset before unpivoting.
+
+    Example: The following DataFrame contains heartrate data for patients
+    treated with two different drugs, 'a' and 'b'.
+
+    .. code-block::
+
+              name   a   b
+        0   Wilbur  67  56
+        1  Petunia  80  90
+        2  Gregory  64  50
+
+    The column names 'a' and 'b' are actually the names of a measured variable
+    (i.e. the name of a drug), but the values are a different measured variable
+    (heartrate). We would like to unpivot these 'a' and 'b' columns into a
+    'drug' column and a 'heartrate' column.
+
+    .. code-block:: python
+
+        df = pd.DataFrame(...).pivot_longer(column_names=['a', 'b'],
+                                            names_to='drug',
+                                            values_to='heartrate')
+
+    .. code-block::
+
+              name drug  heartrate
+        0   Wilbur    a         67
+        1  Petunia    a         80
+        2  Gregory    a         64
+        3   Wilbur    b         56
+        4  Petunia    b         90
+        5  Gregory    b         50
+
+
+    :param df: A pandas dataframe.
+    :param column_names: Name of columns to unpivot. Should be either a single
+        column name as a string, or a list of strings.
+    :param names_to: Name of new column as a string that will contain what were
+        previously the column names in `column_names`.
+    :param values_to: Name of new column as a string that will contain what
+        were previously the values of the columns in `column_names`.
+    :returns: A pandas DataFrame that has been unpivoted from wide to long
+        format.
+    """
+    id_vars = [col for col in df.columns if col not in column_names]
+    df = pd.melt(
+        df.reset_index(),
+        id_vars=id_vars,
+        value_vars=column_names,
+        value_name=values_to,
+        var_name=names_to,
+    )
+
+    return df

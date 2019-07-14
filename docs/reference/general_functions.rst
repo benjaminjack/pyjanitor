@@ -27,6 +27,7 @@ Modify columns
     groupby_agg
     join_apply
     drop_duplicate_columns
+    pivot_longer
 
 Modify values
 ~~~~~~~~~~~~~
